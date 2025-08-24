@@ -12,6 +12,10 @@
 -%}
 
 <style>
+  html {
+    scroll-behavior: smooth;
+  }
+  
   .grid-six-products {
     padding: 4rem 2rem;
     max-width: 1200px;
@@ -307,7 +311,7 @@
   }
 </style>
 
-<div class="grid-six-products" data-bonus-handle="{{ bonus_handle }}">
+<div class="grid-six-products" id="gift-grid" data-bonus-handle="{{ bonus_handle }}">
   {% if heading != blank %}
     <h2 class="grid-heading">{{ heading }}</h2>
   {% endif %}

@@ -363,6 +363,8 @@ class GiftGuideModal {
       });
 
       if (!response.ok) {
+        const responseText = await response.text();
+        console.error('Add to cart failed:', responseText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
