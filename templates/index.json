@@ -1,1 +1,91 @@
-{ "sections": { "main": { "type": "main-blank" } }, "order": ["main"] }
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-blank",
+      "disabled": true,
+      "settings": {}
+    },
+    "banner_gift_guide_PrkPTJ": {
+      "type": "banner-gift-guide",
+      "name": "Gift Guide Banner",
+      "settings": {
+        "top_left_label": "Limited Time",
+        "top_center_text": "Free shipping on orders over $50",
+        "top_cta_label": "Shop Now",
+        "top_cta_url": "",
+        "headline": "The Perfect Gift Awaits",
+        "subcopy": "Discover thoughtful presents for everyone on your list",
+        "primary_cta_label": "Start Shopping",
+        "primary_cta_url": "",
+        "footer_strip_text": "Holiday returns extended until January 31st"
+      }
+    },
+    "grid_six_products_G9QRC8": {
+      "type": "grid-six-products",
+      "blocks": {
+        "product_wmr7bd": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_JHwtPY": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_bjGtx7": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_VbKYCg": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_nxBYqe": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_KHTp6G": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "product_wmr7bd",
+        "product_JHwtPY",
+        "product_bjGtx7",
+        "product_VbKYCg",
+        "product_nxBYqe",
+        "product_KHTp6G"
+      ],
+      "name": "Grid Six Products",
+      "settings": {
+        "heading": "Tisso vision in the wild"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "banner_gift_guide_PrkPTJ",
+    "grid_six_products_G9QRC8"
+  ]
+}
