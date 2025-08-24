@@ -1,0 +1,74 @@
+{
+  "sections": {
+    "banner": {
+      "type": "banner-gift-guide",
+      "settings": {
+        "top_left_label": "Limited Time",
+        "top_center_text": "Free shipping on orders over $50",
+        "top_cta_label": "Shop Now",
+        "top_cta_url": "/collections/all",
+        "headline": "The Perfect Gift Awaits",
+        "subcopy": "Discover thoughtful presents for everyone on your list",
+        "primary_cta_label": "Start Shopping",
+        "primary_cta_url": "/collections/gifts",
+        "footer_strip_text": "Holiday returns extended until January 31st"
+      }
+    },
+    "products": {
+      "type": "grid-six-products",
+      "settings": {
+        "heading": "Tisso vision in the wild"
+      },
+      "blocks": {
+        "product_1": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_2": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_3": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_4": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_5": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        },
+        "product_6": {
+          "type": "product",
+          "settings": {
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "product_1",
+        "product_2",
+        "product_3",
+        "product_4",
+        "product_5",
+        "product_6"
+      ]
+    }
+  },
+  "order": [
+    "banner",
+    "products"
+  ]
+}
