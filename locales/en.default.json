@@ -2,8 +2,15 @@
   "general": {
     "404": {
       "title": "Page not found",
-      "subtext": "The page you requested does not exist.",
+      "subtext": "The page you're looking for doesn't exist.",
       "link": "Continue shopping"
+    },
+    "continue_shopping": "Continue shopping"
+  },
+  "templates": {
+    "404": {
+      "title": "Page not found",
+      "subtext": "The page you're looking for doesn't exist."
     }
   }
 }

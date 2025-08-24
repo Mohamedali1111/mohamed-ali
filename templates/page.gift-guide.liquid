@@ -1,0 +1,10 @@
+{% comment %}
+  Gift Guide Page Template - Hard Fallback
+  This template ensures the Gift Guide page never 404s, even if the JSON template isn't loaded.
+  It renders the two required sections in order: banner-gift-guide, then grid-six-products.
+{% endcomment %}
+
+<main class="gift-guide-page">
+  {% section 'banner-gift-guide' %}
+  {% section 'grid-six-products' %}
+</main>
