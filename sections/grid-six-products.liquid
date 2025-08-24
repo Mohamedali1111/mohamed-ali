@@ -316,9 +316,8 @@
     {% for block in section.blocks %}
       {% if block.type == 'product' and block.settings.product != blank %}
         {% assign product = block.settings.product %}
-        <div class="product-tile" 
-             data-product-handle="{{ product.handle }}"
-             onclick="openProductModal('{{ product.handle }}')">
+        <div class="product-tile gg-product-tile" 
+             data-product-handle="{{ product.handle }}">
           {% if product.featured_image %}
             <img src="{{ product.featured_image | image_url: width: 400 }}" 
                  alt="{{ product.title | escape }}"
@@ -339,24 +338,24 @@
   </div>
 
   <!-- Product Modal -->
-  <div class="product-modal" id="productModal">
+  <div class="product-modal" id="productModal" data-gg-modal>
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">Product Title</h3>
-        <button class="modal-close" onclick="closeProductModal()" aria-label="Close modal">×</button>
+        <h3 class="modal-title" id="modalTitle" data-gg-title>Product Title</h3>
+        <button class="modal-close" data-gg-close aria-label="Close modal">×</button>
       </div>
       
       <div class="modal-body">
-        <img class="modal-image" id="modalImage" src="" alt="">
-        <p class="modal-description" id="modalDescription"></p>
-        <p class="modal-price" id="modalPrice"></p>
+        <img class="modal-image" id="modalImage" data-gg-image src="" alt="">
+        <p class="modal-description" id="modalDescription" data-gg-description></p>
+        <p class="modal-price" id="modalPrice" data-gg-price></p>
         
-        <form id="productForm" onsubmit="addToCart(event)">
+        <form id="productForm" data-gg-form>
           <div class="variant-selectors" id="variantSelectors">
             <!-- Variant selectors will be populated by JavaScript -->
           </div>
           
-          <button type="submit" class="add-to-cart-btn" id="addToCartBtn">
+          <button type="submit" class="add-to-cart-btn" id="addToCartBtn" data-gg-submit>
             <span class="btn-text">ADD TO CART</span>
             <span class="loading-spinner"></span>
           </button>

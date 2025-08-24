@@ -1,151 +1,235 @@
 /**
- * Product Modal and Add to Cart Functionality
+ * Gift Guide Product Modal - Production Ready Implementation
  * Features: Modal management, variant selection, add to cart with bonus product logic
  * Special: Auto-adds bonus product when Color=Black AND Size=Medium
+ * 
+ * DOM Structure Expected:
+ * - Section wrapper: .grid-six-products[data-bonus-handle]
+ * - Product tiles: .gg-product-tile[data-product-handle]
+ * - Modal: [data-gg-modal]
+ * - Modal elements: [data-gg-title], [data-gg-price], [data-gg-image], [data-gg-description]
+ * - Form: [data-gg-form], submit button: [data-gg-submit]
  */
 
-class ProductModal {
+class GiftGuideModal {
   constructor() {
-    this.modal = document.getElementById('productModal');
+    this.modal = null;
     this.currentProduct = null;
     this.bonusHandle = null;
+    this.variantMap = new Map();
+    this.section = null;
+    this.focusableElements = [];
+    this.lastFocusedElement = null;
+    
     this.init();
   }
 
   init() {
-    // Get bonus handle from section data attribute
-    const section = document.querySelector('.grid-six-products');
-    if (section) {
-      this.bonusHandle = section.dataset.bonusHandle || 'dark-winter-jacket';
+    // Find the grid section and get bonus handle
+    this.section = document.querySelector('.grid-six-products');
+    if (!this.section) {
+      console.error('GiftGuideModal: Grid section not found');
+      return;
     }
 
-    // Bind event listeners
+    this.bonusHandle = this.section.dataset.bonusHandle || 'dark-winter-jacket';
+    this.modal = document.querySelector('[data-gg-modal]');
+    
+    if (!this.modal) {
+      console.error('GiftGuideModal: Modal not found');
+      return;
+    }
+
     this.bindEvents();
+    this.setupFocusTrap();
   }
 
   bindEvents() {
-    // Close modal on backdrop click
+    // Product tile clicks
+    const productTiles = this.section.querySelectorAll('.gg-product-tile');
+    productTiles.forEach(tile => {
+      tile.addEventListener('click', (e) => {
+        const handle = tile.dataset.productHandle;
+        if (handle) {
+          this.openModal(handle);
+        }
+      });
+    });
+
+    // Modal close events
+    const closeBtn = this.modal.querySelector('[data-gg-close]');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeModal());
+    }
+
+    // Backdrop click
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
-        this.close();
+        this.closeModal();
       }
     });
 
-    // Close modal on Escape key
+    // Escape key
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.modal.classList.contains('active')) {
-        this.close();
+      if (e.key === 'Escape' && this.isModalOpen()) {
+        this.closeModal();
       }
     });
 
-    // Prevent form submission on Enter key in select elements
+    // Form submission
+    const form = this.modal.querySelector('[data-gg-form]');
+    if (form) {
+      form.addEventListener('submit', (e) => this.handleAddToCart(e));
+    }
+  }
+
+  setupFocusTrap() {
+    // Get all focusable elements in modal
+    this.focusableElements = this.modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    // Handle tab key navigation
     this.modal.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.tagName === 'SELECT') {
-        e.preventDefault();
+      if (e.key === 'Tab') {
+        this.handleTabNavigation(e);
       }
     });
   }
 
-  async open(productHandle) {
+  handleTabNavigation(e) {
+    const firstElement = this.focusableElements[0];
+    const lastElement = this.focusableElements[this.focusableElements.length - 1];
+
+    if (e.shiftKey) {
+      // Shift + Tab
+      if (document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+    } else {
+      // Tab
+      if (document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  }
+
+  async openModal(handle) {
     try {
       this.showLoadingState();
-      
-      // Fetch product data
-      const product = await this.fetchProduct(productHandle);
-      if (!product) {
-        throw new Error('Failed to fetch product data');
-      }
-
-      this.currentProduct = product;
-      this.populateModal(product);
-      this.show();
-      
+      await this.loadProduct(handle);
+      this.showModal();
     } catch (error) {
-      console.error('Error opening product modal:', error);
+      console.error('Error opening modal:', error);
       this.showError('Failed to load product. Please try again.');
     } finally {
       this.hideLoadingState();
     }
   }
 
-  close() {
-    this.modal.classList.remove('active');
-    this.currentProduct = null;
-    
-    // Reset form
-    const form = document.getElementById('productForm');
-    if (form) {
-      form.reset();
-    }
-    
-    // Clear variant selectors
-    const variantSelectors = document.getElementById('variantSelectors');
-    if (variantSelectors) {
-      variantSelectors.innerHTML = '';
-    }
-  }
-
-  show() {
-    this.modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Focus first focusable element
-    const firstFocusable = this.modal.querySelector('button, select, input');
-    if (firstFocusable) {
-      firstFocusable.focus();
-    }
-  }
-
-  async fetchProduct(handle) {
+  async loadProduct(handle) {
     try {
-      const response = await fetch(`/products/${handle}.json`);
+      // Use the .js endpoint as specified
+      const response = await fetch(`/products/${handle}.js`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      return data.product;
+
+      const product = await response.json();
+      this.currentProduct = product;
+      this.buildVariantMap(product);
+      this.populateModal(product);
+      
     } catch (error) {
       console.error('Error fetching product:', error);
       throw error;
     }
   }
 
+  buildVariantMap(product) {
+    this.variantMap.clear();
+    
+    if (!product.variants || product.variants.length === 0) return;
+
+    product.variants.forEach(variant => {
+      const key = this.buildVariantKey(variant);
+      this.variantMap.set(key, variant);
+    });
+  }
+
+  buildVariantKey(variant) {
+    const options = [
+      variant.option1 || '',
+      variant.option2 || '',
+      variant.option3 || ''
+    ];
+    
+    return options.map(opt => (opt || '').toLowerCase()).join('|');
+  }
+
   populateModal(product) {
     // Set basic product info
-    document.getElementById('modalTitle').textContent = product.title;
-    document.getElementById('modalImage').src = product.featured_image || '';
-    document.getElementById('modalImage').alt = product.title;
-    document.getElementById('modalDescription').textContent = this.stripHtml(product.body_html || '');
-    document.getElementById('modalPrice').textContent = this.formatMoney(product.price);
+    this.setElementText('[data-gg-title]', product.title);
+    this.setElementText('[data-gg-description]', this.stripHtml(product.body_html || ''));
+    
+    // Set image
+    const imageElement = this.modal.querySelector('[data-gg-image]');
+    if (imageElement && product.featured_image) {
+      imageElement.src = product.featured_image;
+      imageElement.alt = product.title;
+    }
+
+    // Set initial price from first variant
+    if (product.variants && product.variants.length > 0) {
+      const firstVariant = product.variants[0];
+      this.updatePrice(firstVariant.price);
+    }
 
     // Build variant selectors
     this.buildVariantSelectors(product);
   }
 
+  setElementText(selector, text) {
+    const element = this.modal.querySelector(selector);
+    if (element) {
+      element.textContent = text;
+    }
+  }
+
   stripHtml(html) {
+    if (!html) return '';
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
   }
 
-  formatMoney(cents) {
+  updatePrice(price) {
+    const priceElement = this.modal.querySelector('[data-gg-price]');
+    if (priceElement) {
+      priceElement.textContent = this.formatPrice(price);
+    }
+  }
+
+  formatPrice(price) {
     // Use Shopify.formatMoney if available, otherwise fallback
     if (typeof Shopify !== 'undefined' && Shopify.formatMoney) {
-      return Shopify.formatMoney(cents);
+      return Shopify.formatMoney(price);
     }
     
     // Fallback formatting
-    const dollars = (cents / 100).toFixed(2);
+    const dollars = (price / 100).toFixed(2);
     return `$${dollars}`;
   }
 
   buildVariantSelectors(product) {
-    const container = document.getElementById('variantSelectors');
+    const container = this.modal.querySelector('#variantSelectors');
+    if (!container) return;
+
     container.innerHTML = '';
 
-    if (!product.options || product.options.length === 0) {
-      return;
-    }
+    if (!product.options || product.options.length === 0) return;
 
     product.options.forEach((option, index) => {
       const optionName = option.name;
@@ -162,10 +246,10 @@ class ProductModal {
       label.setAttribute('for', `variant-${index}`);
 
       const select = document.createElement('select');
-      select.className = 'variant-select';
+      select.className = 'variant-select gg-option';
       select.id = `variant-${index}`;
       select.name = `option${index + 1}`;
-      select.setAttribute('data-option-index', index);
+      select.setAttribute('data-option-position', index + 1);
 
       // Add default option
       const defaultOption = document.createElement('option');
@@ -181,51 +265,68 @@ class ProductModal {
         select.appendChild(option);
       });
 
+      // Set default to first available value
+      if (optionValues.length > 0) {
+        select.value = optionValues[0];
+      }
+
+      // Add change listener for price updates
+      select.addEventListener('change', () => this.handleOptionChange());
+
       group.appendChild(label);
       group.appendChild(select);
       container.appendChild(group);
     });
+
+    // Trigger initial price update
+    this.handleOptionChange();
+  }
+
+  handleOptionChange() {
+    const variant = this.getSelectedVariant();
+    if (variant) {
+      this.updatePrice(variant.price);
+    }
   }
 
   getSelectedVariant() {
     if (!this.currentProduct) return null;
 
-    const selects = this.modal.querySelectorAll('.variant-select');
-    const selectedOptions = {};
+    const selects = this.modal.querySelectorAll('.gg-option');
+    const selectedOptions = [];
 
     selects.forEach(select => {
-      const optionIndex = parseInt(select.dataset.optionIndex);
-      const optionName = `option${optionIndex + 1}`;
-      selectedOptions[optionName] = select.value;
+      const position = parseInt(select.dataset.optionPosition);
+      const value = select.value;
+      
+      if (value) {
+        selectedOptions[position - 1] = value;
+      }
     });
 
-    // Find matching variant
-    const variant = this.currentProduct.variants.find(v => {
-      return Object.keys(selectedOptions).every(key => {
-        return !selectedOptions[key] || v[key] === selectedOptions[key];
-      });
-    });
-
-    return variant;
+    // Build the variant key
+    const key = selectedOptions.map(opt => (opt || '').toLowerCase()).join('|');
+    
+    return this.variantMap.get(key);
   }
 
   shouldAddBonusProduct(selectedOptions) {
     if (!selectedOptions) return false;
     
     // Check if Color=Black AND Size=Medium (case-insensitive)
-    const hasBlackColor = Object.values(selectedOptions).some(value => 
+    const hasBlackColor = selectedOptions.some(value => 
       value && value.toLowerCase().includes('black')
     );
     
-    const hasMediumSize = Object.values(selectedOptions).some(value => 
+    const hasMediumSize = selectedOptions.some(value => 
       value && value.toLowerCase().includes('medium')
     );
     
     return hasBlackColor && hasMediumSize;
   }
 
-  async addToCart(event) {
-    event.preventDefault();
+  async handleAddToCart(e) {
+    e.preventDefault();
     
     try {
       this.showLoadingState();
@@ -241,8 +342,8 @@ class ProductModal {
       }];
 
       // Check if we should add bonus product
-      if (this.shouldAddBonusProduct(variant)) {
-        const bonusProduct = await this.fetchProduct(this.bonusHandle);
+      if (this.shouldAddBonusProduct([variant.option1, variant.option2, variant.option3])) {
+        const bonusProduct = await this.fetchBonusProduct();
         if (bonusProduct && bonusProduct.variants.length > 0) {
           // Add first available variant of bonus product
           cartItems.push({
@@ -276,24 +377,83 @@ class ProductModal {
     }
   }
 
-  showLoadingState() {
-    const btn = document.getElementById('addToCartBtn');
-    const btnText = btn.querySelector('.btn-text');
-    const spinner = btn.querySelector('.loading-spinner');
+  async fetchBonusProduct() {
+    try {
+      const response = await fetch(`/products/${this.bonusHandle}.js`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching bonus product:', error);
+      return null;
+    }
+  }
+
+  showModal() {
+    this.modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
     
-    btn.disabled = true;
-    btnText.style.display = 'none';
-    spinner.style.display = 'block';
+    // Store last focused element
+    this.lastFocusedElement = document.activeElement;
+    
+    // Focus first focusable element
+    if (this.focusableElements.length > 0) {
+      this.focusableElements[0].focus();
+    }
+  }
+
+  closeModal() {
+    this.modal.classList.remove('active');
+    document.body.style.overflow = '';
+    this.currentProduct = null;
+    this.variantMap.clear();
+    
+    // Reset form
+    const form = this.modal.querySelector('[data-gg-form]');
+    if (form) {
+      form.reset();
+    }
+    
+    // Clear variant selectors
+    const variantSelectors = this.modal.querySelector('#variantSelectors');
+    if (variantSelectors) {
+      variantSelectors.innerHTML = '';
+    }
+    
+    // Restore focus
+    if (this.lastFocusedElement) {
+      this.lastFocusedElement.focus();
+      this.lastFocusedElement = null;
+    }
+  }
+
+  isModalOpen() {
+    return this.modal.classList.contains('active');
+  }
+
+  showLoadingState() {
+    const submitBtn = this.modal.querySelector('[data-gg-submit]');
+    if (submitBtn) {
+      const btnText = submitBtn.querySelector('.btn-text');
+      const spinner = submitBtn.querySelector('.loading-spinner');
+      
+      if (btnText) btnText.style.display = 'none';
+      if (spinner) spinner.style.display = 'block';
+      submitBtn.disabled = true;
+    }
   }
 
   hideLoadingState() {
-    const btn = document.getElementById('addToCartBtn');
-    const btnText = btn.querySelector('.btn-text');
-    const spinner = btn.querySelector('.loading-spinner');
-    
-    btn.disabled = false;
-    btnText.style.display = 'inline';
-    spinner.style.display = 'none';
+    const submitBtn = this.modal.querySelector('[data-gg-submit]');
+    if (submitBtn) {
+      const btnText = submitBtn.querySelector('.btn-text');
+      const spinner = submitBtn.querySelector('.loading-spinner');
+      
+      if (btnText) btnText.style.display = 'inline';
+      if (spinner) spinner.style.display = 'none';
+      submitBtn.disabled = false;
+    }
   }
 
   showError(message) {
@@ -302,29 +462,7 @@ class ProductModal {
   }
 }
 
-// Global functions for onclick handlers
-let productModal;
-
-function openProductModal(handle) {
-  if (!productModal) {
-    productModal = new ProductModal();
-  }
-  productModal.open(handle);
-}
-
-function closeProductModal() {
-  if (productModal) {
-    productModal.close();
-  }
-}
-
-function addToCart(event) {
-  if (productModal) {
-    productModal.addToCart(event);
-  }
-}
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  productModal = new ProductModal();
+  new GiftGuideModal();
 });
